@@ -49,6 +49,13 @@ void Networking::Socket::CloseSock(SOCKET s)
 
 int Networking::Socket::Connect(SOCKET s)
 {
+	iResult = connect(s, result->ai_addr, result->ai_addrlen);
+	if (iResult == SOCKET_ERROR)
+	{
+		printf("connect failed");
+		return 1;
+	}
+
 	return 0;
 }
 

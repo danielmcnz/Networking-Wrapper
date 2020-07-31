@@ -41,7 +41,7 @@ EXAMPLE TCP SERVER
 
 void TCPServer()
 {
-	sockinfo sInfo("3591", 0);
+	sockinfo sInfo("3591", "");
 
 	Socket socket(sInfo);
 	SOCKET sock = socket.Sock(AF_INET, SOCK_STREAM, IPPROTO_TCP, AI_PASSIVE);
