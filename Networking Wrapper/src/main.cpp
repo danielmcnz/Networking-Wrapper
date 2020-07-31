@@ -6,18 +6,59 @@ using namespace Networking;
 
 using Networking::Socket;
 
-void UDP();
+void TCPServer();
+void TCPClient();
+void UDPServer();
 
 int main()
 {
-	sockinfo sInfo;
-	sInfo.port = "3591";
-	sInfo.ip = 0;
+	TCPClient();
+
+	return 0;
+}
+
+void TCPClient()
+{
+	sockinfo sInfo("3591", "192.168.20.112");
 
 	Socket socket(sInfo);
 	SOCKET sock = socket.Sock(AF_INET, SOCK_STREAM, IPPROTO_TCP, 0);
-	
-	return 0;
+	socket.Connect(sock);
+
+	std::string msg = "dsfsddfs";
+	socket.TCPSend(sock, msg);
+
+	socket.CloseSock(sock);
+}
+
+/*
+EXAMPLE TCP SERVER
+	uses ipv4 to recieve messages from clients on port 3591
+	prints out message received from client and ip i.e.
+
+		192.168.20.112: hello world
+*/
+
+void TCPServer()
+{
+	sockinfo sInfo("3591", 0);
+
+	Socket socket(sInfo);
+	SOCKET sock = socket.Sock(AF_INET, SOCK_STREAM, IPPROTO_TCP, AI_PASSIVE);
+	socket.Bind(sock);
+	socket.Listen(sock);
+
+	while (true)
+	{
+		socket.Accept(sock);
+
+		sockinfo sClientInfo("3591", "192.168.20.112");
+		std::string msg = socket.TCPRecv(sock, sClientInfo);
+
+		printf("%s: %s", sClientInfo.ip, msg);
+	}
+
+	socket.CloseSock(sock);
 }
 
 /* 
@@ -28,11 +69,9 @@ EXAMPLE UDP SERVER
 		192.168.20.112: hello world
 */
 
-void UDP()
+void UDPServer()
 {
-	sockinfo sInfo;
-	sInfo.port = "3591";
-	sInfo.ip = 0;
+	sockinfo sInfo("3591", 0);
 
 	Socket socket(sInfo);
 	SOCKET sock = socket.Sock(AF_INET, SOCK_DGRAM, IPPROTO_UDP, AI_PASSIVE);

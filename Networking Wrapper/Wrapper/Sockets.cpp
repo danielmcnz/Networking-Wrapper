@@ -25,7 +25,7 @@ SOCKET Networking::Socket::Sock(int family, int socktype, int protocol, int flag
 	hints.ai_protocol = protocol;
 	hints.ai_flags = flags;
 
-	iResult = getaddrinfo(sInfo.ip, sInfo.port.c_str(), &hints, &result);
+	iResult = getaddrinfo(sInfo.ip.c_str(), sInfo.port.c_str(), &hints, &result);
 	if (iResult != 0)
 	{
 		printf("getaddrinfo failed\n");
@@ -64,8 +64,32 @@ int Networking::Socket::Bind(SOCKET s)
 	return 0;
 }
 
-int Networking::Socket::Listen(SOCKET s)
+int Networking::Socket::Listen(SOCKET s, int backlog)
 {
+	iResult = listen(s, backlog);
+	if (iResult != 0)
+	{
+		printf("listen failed");
+		return 1;
+	}
+
+	return 0;
+}
+
+int Networking::Socket::Accept(SOCKET s)
+{
+	sockaddr_storage client;
+	socklen_t size;
+
+	size = sizeof(client);
+
+	iResult = accept(s, (sockaddr*)&client, &size);
+	if (iResult != 0)
+	{
+		printf("accept failed");
+		return 1;
+	}
+
 	return 0;
 }
 
@@ -118,13 +142,42 @@ int Networking::Socket::UDPSend(SOCKET s, std::string sendmsg)
 	return 0;
 }
 
-std::string Networking::Socket::TCPRecv(SOCKET s)
+std::string Networking::Socket::TCPRecv(SOCKET s, sockinfo& clientinfo)
 {
-	return std::string();
+	sockaddr client;
+	socklen_t clientlen = sizeof(client);
+	char msgbuffer[MAXBUFLEN];
+	char clientaddr[INET6_ADDRSTRLEN];
+	numbytes = recv(s, msgbuffer, sizeof(msgbuffer), 0);
+	if(numbytes == SOCKET_ERROR)
+	{
+		printf("recv failed\n");
+	}
+
+	inet_ntop(client.sa_family, get_in_addr((sockaddr*)&client), clientaddr,
+		sizeof(clientaddr));
+
+	clientinfo.ip = new char[INET6_ADDRSTRLEN];
+
+	for (int i = 0; i < INET6_ADDRSTRLEN; ++i)
+	{
+		clientinfo.ip[i] = clientaddr[i];
+	}
+
+	msgbuffer[numbytes] = '\0';
+
+	return msgbuffer;
 }
 
 int Networking::Socket::TCPSend(SOCKET s, std::string sendmsg)
 {
+	numbytes = send(s, (char*)sendmsg.c_str(), sizeof(sendmsg), 0);
+	if (numbytes == SOCKET_ERROR)
+	{
+		printf("send failed\n");
+		return 1;
+	}
+
 	return 0;
 }
 
