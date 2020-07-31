@@ -20,6 +20,14 @@ int main()
 	return 0;
 }
 
+/* 
+EXAMPLE UDP SERVER 
+	uses ipv4 to recieve messages from clients on port 3591
+	prints out message received from client and ip i.e.
+
+		192.168.20.112: hello world
+*/
+
 void UDP()
 {
 	sockinfo sInfo;
@@ -40,16 +48,5 @@ void UDP()
 		std::string msg = socket.UDPRecv(sock, sClientInfo);
 
 		printf("%s: %s", sClientInfo.ip, msg.c_str());
-
-		// Send message
-		Socket clientSocket(sClientInfo);
-		SOCKET clientSock = clientSocket.Sock(AF_INET, SOCK_DGRAM,
-			IPPROTO_UDP, 0);
-
-
-		if (clientSocket.Bind(clientSock))
-		{
-			socket.UDPSend(sock, sendmsg);
-		}
 	}
 }
