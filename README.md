@@ -1,4 +1,12 @@
 # Networking-Wrapper
 Networking Wrapper for C++
 
-Supports both TCP and UCP, however, INET6 has not been fully implmented.
+Support for TCP and UCP.
+
+## ISSUES
+- `sendto` and `send` not working
+
+## TODO
+- blocking capability
+- safer protocols
+- encryption
