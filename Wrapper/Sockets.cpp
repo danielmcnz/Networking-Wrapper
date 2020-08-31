@@ -1,22 +1,32 @@
 #include "Sockets.h"
 
-Networking::Socket::Socket(sockinfo sInfo)
+using namespace Networking;
+
+Socket::Socket(sockinfo sInfo)
 	:
 	sInfo(sInfo)
 {
+	#if defined(_WIN64) || defined (_WIN32)
+
 	WSAData wsaData;
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 	{
 		printf("wsastartip falied\n");
 	}
+
+	#endif
 }
 
-Networking::Socket::~Socket()
+Socket::~Socket()
 {
+	#if defined(_WIN64) || defined(_WIN32)
+
 	WSACleanup();
+
+	#endif
 }
 
-SOCKET Networking::Socket::Sock(int family, int socktype, int protocol, int flags)
+SOCKET Socket::Sock(int family, int socktype, int protocol, int flags)
 {
 	SOCKET s;
 	memset(&hints, 0, sizeof(hints));
@@ -33,7 +43,7 @@ SOCKET Networking::Socket::Sock(int family, int socktype, int protocol, int flag
 	}
 
 	s = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-	if (s == SOCKET_ERROR)
+	if (s == -1)
 	{
 		printf("socket failed\n");
 		return 1;
@@ -42,15 +52,23 @@ SOCKET Networking::Socket::Sock(int family, int socktype, int protocol, int flag
 	return s;
 }
 
-void Networking::Socket::CloseSock(SOCKET s)
+void Socket::CloseSock(SOCKET s)
 {
+	#if defined(_WIN64) || defined(_WIN32)
+
 	closesocket(s);
+
+	#elif defined(linux)
+
+	close(s);
+
+	#endif
 }
 
-int Networking::Socket::Connect(SOCKET s)
+int Socket::Connect(SOCKET s)
 {
 	iResult = connect(s, result->ai_addr, result->ai_addrlen);
-	if (iResult == SOCKET_ERROR)
+	if (iResult == -1)
 	{
 		printf("connect failed");
 		return 1;
@@ -59,10 +77,10 @@ int Networking::Socket::Connect(SOCKET s)
 	return 0;
 }
 
-int Networking::Socket::Bind(SOCKET s)
+int Socket::Bind(SOCKET s)
 {
 	iResult = bind(s, result->ai_addr, result->ai_addrlen);
-	if (iResult == SOCKET_ERROR)
+	if (iResult == -1)
 	{
 		printf("\nbind failed\n");
 		return 1;
@@ -71,7 +89,7 @@ int Networking::Socket::Bind(SOCKET s)
 	return 0;
 }
 
-int Networking::Socket::Listen(SOCKET s, int backlog)
+int Socket::Listen(SOCKET s, int backlog)
 {
 	iResult = listen(s, backlog);
 	if (iResult != 0)
@@ -83,7 +101,7 @@ int Networking::Socket::Listen(SOCKET s, int backlog)
 	return 0;
 }
 
-int Networking::Socket::Accept(SOCKET s)
+int Socket::Accept(SOCKET s)
 {
 	sockaddr_storage client;
 	socklen_t size;
@@ -100,7 +118,7 @@ int Networking::Socket::Accept(SOCKET s)
 	return 0;
 }
 
-std::string Networking::Socket::UDPRecv(SOCKET s, sockinfo& clientinfo)
+std::string Socket::UDPRecv(SOCKET s, sockinfo& clientinfo)
 {
 	sockaddr client;
 	socklen_t clientlen = sizeof(client);
@@ -109,7 +127,7 @@ std::string Networking::Socket::UDPRecv(SOCKET s, sockinfo& clientinfo)
 
 	numbytes = recvfrom(s, msgbuffer, MAXBUFLEN - 1, 0,
 		(sockaddr*)&client, &clientlen);
-	if (numbytes == SOCKET_ERROR)
+	if (numbytes == -1)
 	{
 		printf("recvfrom failed\n");
 	}
@@ -134,11 +152,11 @@ std::string Networking::Socket::UDPRecv(SOCKET s, sockinfo& clientinfo)
 	return msgbuffer;
 }
 
-int Networking::Socket::UDPSend(SOCKET s, std::string sendmsg)
+int Socket::UDPSend(SOCKET s, std::string sendmsg)
 {
 	numbytes = sendto(s, sendmsg.c_str(), sendmsg.length(), 0,
 		result->ai_addr, result->ai_addrlen);
-	if (numbytes == SOCKET_ERROR)
+	if (numbytes == -1)
 	{
 		printf("sendto failed\n");
 		return 1;
@@ -149,14 +167,14 @@ int Networking::Socket::UDPSend(SOCKET s, std::string sendmsg)
 	return 0;
 }
 
-std::string Networking::Socket::TCPRecv(SOCKET s, sockinfo& clientinfo)
+std::string Socket::TCPRecv(SOCKET s, sockinfo& clientinfo)
 {
 	sockaddr client;
 	socklen_t clientlen = sizeof(client);
 	char msgbuffer[MAXBUFLEN];
 	char clientaddr[INET6_ADDRSTRLEN];
 	numbytes = recv(s, msgbuffer, sizeof(msgbuffer), 0);
-	if(numbytes == SOCKET_ERROR)
+	if(numbytes == -1)
 	{
 		printf("recv failed\n");
 	}
@@ -176,10 +194,10 @@ std::string Networking::Socket::TCPRecv(SOCKET s, sockinfo& clientinfo)
 	return msgbuffer;
 }
 
-int Networking::Socket::TCPSend(SOCKET s, std::string sendmsg)
+int Socket::TCPSend(SOCKET s, std::string sendmsg)
 {
 	numbytes = send(s, (char*)sendmsg.c_str(), sizeof(sendmsg), 0);
-	if (numbytes == SOCKET_ERROR)
+	if (numbytes == -1)
 	{
 		printf("send failed\n");
 		return 1;
@@ -188,7 +206,7 @@ int Networking::Socket::TCPSend(SOCKET s, std::string sendmsg)
 	return 0;
 }
 
-void* Networking::Socket::get_in_addr(sockaddr* sa)
+void* Socket::get_in_addr(sockaddr* sa)
 {
 	if (sa->sa_family == AF_INET) {
 		return &(((struct sockaddr_in*)sa)->sin_addr);
